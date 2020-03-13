@@ -31,8 +31,8 @@ if __name__ == '__main__':
 	article_urls = []
 	for i in range(942):
 		print("scaping page %d" % (i + 1))
-		urls = "https://climatechangedispatch.com/page/1/"
-		#urls = "https://climatechangedispatch.com/page/" + str(i + 1) + "/"
+		# urls = "https://climatechangedispatch.com/page/1/"
+		urls = "https://climatechangedispatch.com/page/" + str(i + 1) + "/"
 		post_urls = scrape(urls, article_urls)
 		# print(post_urls)
 

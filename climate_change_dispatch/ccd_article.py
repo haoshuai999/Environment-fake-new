@@ -24,10 +24,14 @@ def scrape(url):
 
 	all_post_text = ""
 	page_html_text = requests.get(url, headers=headers).text
-	page_html_text = re.sub(r"<img class=\"(.*?)<\/noscript>", "", page_html_text)
+	try:
+		page_html_text = re.sub(r"<img class=\"(.*?)<\/noscript>", "", page_html_text)
+	except:
+		pass
 	# print(page_html_text)
 	page_html = fromstring(page_html_text)
 
+	origin_source = ""
 	author = page_html.cssselect(".tm-article-meta a")[0]
 	author_text = author.text_content()
 	date = page_html.cssselect(".tm-article-meta time")[0]
@@ -38,7 +42,10 @@ def scrape(url):
 	# print(main_body[0].text)
 	for para in main_body:
 		para_text = para.text_content().strip()
-		all_post_text += para_text
+		if re.search(r"Read more", para_text):
+			origin_source = re.sub(r"Read more at", "", para_text).strip()
+		else:
+			all_post_text += para_text
 	
 	# try:
 	# 	main_post = page_html.cssselect(".topic-content p")[0]
@@ -54,7 +61,7 @@ def scrape(url):
 	# 	reply = ''
 
 
-	return (date_text, title_text, author_text, all_post_text)
+	return (date_text, title_text, author_text, all_post_text, origin_source)
 
 if __name__ == '__main__':
 	# scrape("https://climatechangedispatch.com/11-million-jobs-at-risk-eu-green-deal/")
@@ -66,23 +73,25 @@ if __name__ == '__main__':
 	title_list = []
 	author_list = []
 	main_body_list = []
+	origin_source_list = []
 
 	count = 0
 	for url in urls:
 		count += 1
-		date, title, author, main_body = scrape(url)
+		date, title, author, main_body, origin_source = scrape(url)
 		url_list.append(url)
 		date_list.append(date)
 		title_list.append(title)
 		author_list.append(author)
 		main_body_list.append(main_body)
+		origin_source_list.append(origin_source)
 		if count % 500 == 0:
 			print(count)
 			print("output csv")
-			df = pd.DataFrame(list(zip(url_list, date_list, title_list, author_list, main_body_list)), columns=['URL', 'Date', 'Title', 'Author', 'Main-body'])
+			df = pd.DataFrame(list(zip(url_list, date_list, title_list, author_list, main_body_list, origin_source_list)), columns=['URL', 'Date', 'Title', 'Author', 'Main-body', 'Origin-source'])
 			df['Source'] = "Climate Change Dispatch"
 			df.to_csv("ccd_post.csv", index=False, encoding='utf-8-sig')
 
-	df = pd.DataFrame(list(zip(url_list, date_list, title_list, author_list, main_body_list)), columns=['URL', 'Date', 'Title', 'Author', 'Main-body'])
+	df = pd.DataFrame(list(zip(url_list, date_list, title_list, author_list, main_body_list, origin_source_list)), columns=['URL', 'Date', 'Title', 'Author', 'Main-body', 'Origin-source'])
 	df['Source'] = "Climate Change Dispatch"
 	df.to_csv("ccd_post.csv", index=False, encoding='utf-8-sig')
